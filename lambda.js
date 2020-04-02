@@ -10,10 +10,10 @@ let tableName = "image-collection-coursework";
 
 exports.handler = function (event, context, callback) {
     lambdaCallback = callback;
-    console.log(event);
     let body = JSON.parse(event.Records[0].body);
     bucket = body.Records[0].s3.bucket.name;
     key = body.Records[0].s3.object.key;
+    console.log(bucket + " " + key);
     rekognizeLabels(bucket, key)
         .then(function (data) {
             let labelData = data["Labels"];
@@ -47,7 +47,7 @@ function rekognizeLabels(bucket, key){
 function addToTable(ObjectId, labels){
    
     let params = {
-        TabelName: tableName,
+        TableName: tableName,
         Item: {
             RekognitionId: ObjectId,
             labels: labels

@@ -1,11 +1,12 @@
 const inquirer = require('inquirer');
 const AWS = require('aws-sdk');
-const uuid = require('uuid');
 const fs = require('fs');
 
-const ID = 'AKIAXOX5QUJFMS6W43O3';
-const SECRET = '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';
-const BUCKET = 'cpd-coursework-rekognition';
+
+
+const ID = 'Type ID Here';
+const SECRET = 'Type Secret Here;
+const BUCKET = 'Type Bucket here';
 
 
 
@@ -23,8 +24,8 @@ inquirer
       console.log('Thanks for using the app');
       return
     }
-    if(answers.reptile === 'Display'){
-      downloadFile();
+    if (answers.reptile === 'Display') {
+      listFiles();
     }
 
     if (answers.reptile === 'Upload') {
@@ -37,9 +38,20 @@ inquirer
         uploadImage(answers['file']);
       })
     }
+    if (answers.reptile === 'Download Image') {
+      let question = [{
+        type: 'input',
+        name: 'file',
+        message: 'What is the name of the file?'
+      }]
+      inquirer.prompt(question).then(answers => {
+        download(answers['file']);
+      })
+    }
+    
     console.info('Answer:', answers.reptile);
   });
-    
+
 
 
 
@@ -53,7 +65,7 @@ function uploadImage(filename) {
   let fileContent = fs.readFileSync(filename);
 
   const params = {
-    Bucket: 'cpd-coursework-rekognition',
+    Bucket: 'TYPE BUCKET NAME HERE',
     Key: filename,
     Body: fileContent
   };
@@ -64,20 +76,18 @@ function uploadImage(filename) {
     }
     console.log(`File uploaded to:  ${data.Location}`);
   });
-
 };
 
-async function downloadFile() {
+async function listFiles() {
   const s3 = new AWS.S3({
-    
-    accessKeyId: this.ID,
+     accessKeyId: this.ID,
     secretAccessKey: this.SECRET
   });
 
   let isTruncated = true;
   let marker;
-  while(isTruncated) {
-    let params = { Bucket: 'cpd-coursework-rekognition'};
+  while (isTruncated) {
+    let params = { Bucket: 'TYPE BUCKET NAME HERE' };
     if (marker) params.Marker = marker;
     try {
       const response = await s3.listObjects(params).promise();
@@ -88,9 +98,28 @@ async function downloadFile() {
       if (isTruncated) {
         marker = response.Contents.slice(-1)[0].Key;
       }
-  } catch(error) {
+    } catch (error) {
       throw error;
     }
   }
-
 };
+
+function download(fileName){
+  let fileDest = fs.createWriteStream(`/users/mateusz/downloads/${fileName}`);
+  const s3 = new AWS.S3({
+
+    accessKeyId: this.ID,
+    secretAccessKey: this.SECRET
+  });
+  let s3Stream = s3.getObject({Bucket: 'TYPE BUCKET NAME HERE', Key: fileName}).createReadStream();
+  s3Stream.on('error', function(err) {
+
+    console.error(err);
+});
+s3Stream.pipe(fileDest).on('error', function(err) {
+
+    console.error('File Stream:', err);
+}).on('close', function() {
+    console.log('File ' + fileName + ' downloaded');
+});
+}
